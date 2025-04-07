@@ -1,10 +1,10 @@
 {
-  "name": "ilyabirman-likely",
+  "name": "@horoshop/likely",
   "description": "The social sharing buttons that aren’t shabby",
-  "version": "4.0.0-dev",
+  "version": "4.0.1-horoshop.1",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ilyabirman/Likely.git"
+    "url": "git+https://github.com/Zteel/Likely.git"
   },
   "author": {
     "name": "Ilya Birman",
@@ -23,6 +23,9 @@
   ],
   "license": "MIT",
   "main": "release/likely-commonjs.js",
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build:dev:dom": "webpack --progress --profile --node-env=development --env commonjs=false",
     "build:dev:commonjs": "webpack --progress --profile --node-env=development --env commonjs=true",

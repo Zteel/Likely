@@ -1,50 +1,15 @@
-![Likely logo](logo.png)
-
-The social sharing buttons that aren’t shabby.
-
-Version [3.1](https://github.com/NikolayRys/Likely/releases/tag/v3.1.0) is out 🎉
-
-## Take a look
-
-See Likely in action on its [homepage](http://ilyabirman.net/projects/likely/).
-
-[![Likely screenshot](example.jpeg)](http://ilyabirman.net/projects/likely/)
-[More on choosing a theme](#light--dark-theme)
-
 Likely supports following social networks and messengers:
 
 * `facebook` – Facebook
 * `linkedin` – LinkedIn
-* `odnoklassniki` – OK (Odnoklassniki)
 * `pinterest` – Pinterest
 * `reddit` – Reddit
-* `telegram` – Telegram
+* `threads` – Threads
 * `twitter` – Twitter
 * `viber` – Viber
-* `vkontakte` – VK
 * `whatsapp` – WhatsApp
+* `xcom` – x.com
 
-## Get
-[Download the last release](https://github.com/NikolayRys/Likely/releases/download/v3.0.0/ilyabirman-likely-3.0.0.zip) and move `likely.js` and
-`likely.css` to the desired directory.
-
-Or use npm or Bower:
-
-```sh
-$ npm install ilyabirman-likely --save
-```
-
-Also you can use Likely from CDN:
-
-https://unpkg.com/ilyabirman-likely@2/release/likely.min.css
-<br>
-https://unpkg.com/ilyabirman-likely@2/release/likely.min.js
-
-or
-
-https://unpkg.com/ilyabirman-likely@2/release/likely.css
-<br>
-https://unpkg.com/ilyabirman-likely@2/release/likely.js
 
 ## Setup
 
@@ -62,10 +27,10 @@ If installed with npm:
 
 ```html
 <!-- Head -->
-<link href="node_modules/ilyabirman-likely/release/likely.css"
+<link href="node_modules/@horoshop/likely/release/likely.css"
       rel="stylesheet">
 <!-- End of body -->
-<script src="node_modules/ilyabirman-likely/release/likely.js"
+<script src="node_modules/@horoshop/likely/release/likely.js"
         type="text/javascript"></script>
 ```
 
@@ -74,15 +39,14 @@ Then, create a `div` with the class `likely` and list necessary social networks:
 ```html
 <div class="likely">
     <div class="facebook">Share</div>
-    <div class="twitter">Tweet</div>
-    <div class="vkontakte">Share</div>
     <div class="pinterest">Pin</div>
-    <div class="odnoklassniki">Like</div>
     <div class="telegram">Send</div>
+    <div class="threads">Send</div>
     <div class="linkedin">Share</div>
     <div class="whatsapp">Send</div>
     <div class="viber">Send</div>
     <div class="reddit">Share</div>
+    <div class="xcom">Share</div>
 </div>
 ```
 
@@ -95,13 +59,13 @@ Likely can be used as a CommonJS module, so you can use it within webpack or bro
 First, install Likely using npm:
 
 ```sh
-$ npm install ilyabirman-likely --save
+$ npm install @horoshop/likely --save
 ```
 
 Then, use it as CommonJS module somewhere in your program:
 
 ```js
-var likely = require('ilyabirman-likely');
+var likely = require('@horoshop/likely');
 
 // Finds all the widgets in the DOM and initializes them
 likely.initiate();
@@ -142,16 +106,6 @@ but it's highly recommended to set up the proper <meta> tags for your page, to w
 
 [Linkedin Open Graph protocol documentation](https://www.linkedin.com/help/linkedin/answer/46687/making-your-website-shareable-on-linkedin).
 
-### OK (Odnoklassniki)
-```html
-<div class="odnoklassniki" data-imageurl="http://i.imgur.com/zunNbfY.jpg">Like</div>
-```
-* **url** - url to share.
-* **title** - text which is used as a title of created post.
-* **imageurl** - url to a picture which is used as a thumbnail for the post.
-* **counter** - if provided, blocks the API call and simply shows given value instead.
-
-[OK Open Graph protocol documentation](https://apiok.ru/en/ext/like).
 
 ### Pinterest
 ```html
@@ -213,18 +167,6 @@ so if you don't want the title to appear, please set empty `data-title=""` attri
 
 [Viber Open Graph protocol documentation](https://stackoverflow.com/questions/34941283)
 
-### VK
-```html
-<div class="vkontakte" data-image="https://placekitten.com/200/400" data-comment="Check this out">Share</div>
-```
-* **url** - url to share.
-* **title** - text used as the preview header
-* **image** - url for image used as the preview thumbnail
-* **comment** - default post text that the user can edit.
-* **counter** - if provided, blocks the API call and simply shows given value instead.
-
-[VK Open Graph protocol documentation](https://vk.com/dev/widget_share) (switch to Russian language, English docs are incomplete).
-
 ### Whatsapp
 ```html
 <div class="whatsapp">Send</div>
@@ -252,16 +194,6 @@ Counters are enabled by default, but there are two ways to disable them:
 * Another option is to supply a custom value for `data-counter` attribute of the specific services.
 Likely won't do an API request for those services and just display the given value instead.
 
-### Accessibility
-From version 4 Likely uses Shadow Dom, but attributes `role` and `aria-label` on top-level <divs> are respected and added to the generated links. 
-
-```html
-<div class="likely">
-    <div class="facebook" role="link" aria-label="Share on Facebook">Share</div>
-    <div class="twitter" role="link" aria-label="Tweet on Twitter">Tweet</div>
-    <!-- The same for each services -->
-</div>
-```
 
 ### Light / dark theme
 It's possible to use alternative (dark-mode suitable) styling by adding `likely-dark-theme` (or its old alias `likely-light`) class to the main `div.likely`
@@ -274,12 +206,3 @@ Additionally, if your website is responsive to users' color theme preferences, h
 
 ### Supported browsers
 We support IE 10+, Safari 9+ and the latest versions of Chrome, Firefox and Edge. Likely might work in the older versions too but we don’t maintain the compatibility on purpose.
-
-# Development
-Please use the [Github commit style](https://gist.github.com/robertpainsi/b632364184e70900af4ab688decf6f53).
-Before pushing make sure the tests are green and the linter does not complain.
-```bash
-npm test
-npm run-script check-codestyle
-```
-Also, please, add your own tests if you are submitting a feature.
