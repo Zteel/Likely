@@ -1,7 +1,7 @@
 {
   "name": "@horoshop/likely",
   "description": "The social sharing buttons that aren’t shabby",
-  "version": "4.0.2-horoshop.1",
+  "version": "3.2.0-horoshop.1",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Zteel/Likely.git"
