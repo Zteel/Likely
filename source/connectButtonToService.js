@@ -5,8 +5,8 @@ import { interpolateUrl } from './utils';
  *  1. Callbacks for all buttons that share the same value.
  *  2. Prepared service counter URL.
  *  3. Value, returned from this URL
- * @param {string} counterUrl
- * @param {string} pageUrl
+ * @param {String} counterUrl
+ * @param {String} pageUrl
  */
 function UpdateBroadcaster(counterUrl, pageUrl) {
     this.url = interpolateUrl(counterUrl, { url: pageUrl });
@@ -16,12 +16,12 @@ function UpdateBroadcaster(counterUrl, pageUrl) {
 
 /**
  * Connects new related button with its callback.
- * @param {Function} buttonSetterFn
+ * @param {Function} buttonSetter
  */
-UpdateBroadcaster.prototype.register = function (buttonSetterFn) {
-    this.setters.push(buttonSetterFn);
+UpdateBroadcaster.prototype.register = function (buttonSetter) {
+    this.setters.push(buttonSetter);
     if (this.value) {
-        buttonSetterFn(this.value);
+        buttonSetter(this.value);
     }
 };
 
@@ -38,15 +38,15 @@ UpdateBroadcaster.prototype.trigger = function (value) {
 
 /**
  * Find or create an appropriate instance of UpdateBroadcaster
- * @param {Function} buttonSetterFn
- * @param {object} options
+ * @param {Function} buttonSetter
+ * @param {Object} options
  */
-export default (buttonSetterFn, options) => {
+export default (buttonSetter, options) => {
     let broadcaster = options.service.broadcastersByUrl[options.url];
     if (!broadcaster) {
         broadcaster = new UpdateBroadcaster(options.service.counterUrl, options.url);
         options.service.broadcastersByUrl[options.url] = broadcaster;
         options.service.fetch(broadcaster);
     }
-    broadcaster.register(buttonSetterFn);
+    broadcaster.register(buttonSetter);
 };

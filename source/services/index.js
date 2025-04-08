@@ -1,5 +1,9 @@
+/**
+ * Social network services aggregated together
+ */
+import Service from '../service';
+
 import facebook from './facebook';
-import initService from '../init_service';
 import linkedin from './linkedin';
 import pinterest from './pinterest';
 import reddit from './reddit';
@@ -19,9 +23,12 @@ const services = {
     viber,
     whatsapp,
     xcom,
-    x: xcom,
 };
 
-Object.values(services).forEach((serviceObj) => initService(serviceObj));
+Object.entries(services).forEach((entry) => {
+    const [serviceName, serviceObj] = entry;
+    Service(serviceObj);
+    serviceObj.name = serviceName;
+});
 
 export default services;
