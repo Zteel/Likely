@@ -75,10 +75,10 @@ likely.initiate();
 You can configure Likely by specifying `data-*` attributes on a button group with the `likely` class or on the button of a specific service.
 
 Top-level options are passed down to all the services. They can also be overridden on an individual service tag.
-* `data-url` – URL to share and load counters for, defaults to the current page URL. ⚠ Specify the full URL with the protocol – like in `https://ilyabirman.com` – because some social networks don’t recognize the partial one.
+* `data-url` – URL to share and load counters for, defaults to the current page URL. ⚠ Specify the full URL with the protocol – because some social networks don’t recognize the partial one.
 * `data-title` – Text that will be added to the shared URL. Defaults to the page title.
 ```html
-<div class="likely" data-url="https://github.com/ilyabirman/Likely" data-title="My page">
+<div class="likely" data-url="https://github.com/Zteel/Likely" data-title="My page">
     <!-- List of services -->
 </div>
 ```

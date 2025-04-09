@@ -1,98 +1,95 @@
 import Button from './button';
+
 import config from './config';
 import { toArray } from './utils';
 
 /**
- * Main widget view.
- * It serves as a container for all buttons and manages their rendering.
+ * Main widget view
  * @param {Node} container
- * @param {object} options
+ * @param {Object} options
  */
-export default class Likely {
-    #options;
-    #sourceLikelyDiv;
-    #awaitedButtons;
-    #readyDelay;
-    #buttons;
-
+class Likely {
     constructor(container, options) {
-        this.#options = options;
-        this.#sourceLikelyDiv = container;
-        this.#awaitedButtons = 0;
-        this.#readyDelay = null;
-        this.#buttons = [];
-    }
+        this.container = container;
+        this.options = options;
 
-    // Main method that initializes the widget
-    renderButtons() {
-        toArray(this.#sourceLikelyDiv.children).forEach(this.#addButton.bind(this));
-        this.#sourceLikelyDiv.classList.add(`${config.name}_visible`);
-    
-        if (this.#options.counters) {
-            this.#readyDelay = setTimeout(this.#ready.bind(this), this.#options.timeout);
-        } else {
-            this.#ready();
+        this.countersLeft = 0;
+        this.buttons = [];
+
+        toArray(this.container.children).forEach(this.addButton.bind(this));
+
+        // Temporary visibility hidden to prevent delays in rendering
+        this.container.classList.add(`${config.name}_visible`);
+        if (this.options.counters) {
+            this.readyDelay = setTimeout(this.ready.bind(this), this.options.timeout);
         }
-        
-        this.#showButtons();
-    }
-    
-
-    /**
-     * Refresh all the counters
-     * Can be used repeatedly after the widget was initialized with renderButtons
-     * @param {object} options
-     */
-    update(options) {
-        if (
-            options.forceUpdate ||
-            options.url && options.url !== this.#options.url
-        ) {
-            this.#awaitedButtons = this.#buttons.length;
-            this.#buttons.forEach((button) => button.update(options));
+        else {
+            this.ready();
         }
+        this.materializeButtons();
     }
 
     /**
-     * Buttons use it to report that they were successfully connected to the service for counters,
-     * and now they are ready to be displayed
+     * Add a button
+     * @param {Node} node
      */
-    #reportReadiness() {
-        this.#awaitedButtons--;
-        if (this.#awaitedButtons === 0) {
-            clearTimeout(this.#readyDelay);
-            this.#ready();
+    addButton(node) {
+        const button = new Button(node, this, this.options);
+        if (button.isConnected()) {
+            this.buttons.push(button);
+            if (button.options.service.counterUrl) {
+                this.countersLeft++;
+            }
         }
-    }
-
-    /**
-     * Display ready status
-     */
-    #ready() {
-        // Remove class_visible to prevent flickering
-        this.#sourceLikelyDiv.classList.remove(`${config.name}_visible`);
-        this.#sourceLikelyDiv.classList.add(`${config.name}_ready`);
-    }
-
-    /**
-     * Add a button, private method
-     * @param {Node} sourceElement
-     */
-    #addButton(sourceElement) {
-        const button = new Button(sourceElement, this.#options, this.#reportReadiness.bind(this));
-        if (button.setService()) {
-            this.#awaitedButtons++;
-            this.#buttons.push(button);
-            button.build();
+        else if (button.isUnrecognized()) {
+            console.warn('A button without a valid service detected, please check button classes.');
         }
     }
 
     /**
      * Show all the buttons
      */
-    #showButtons() {
-        this.#buttons.forEach((button) => {
-            this.#sourceLikelyDiv.appendChild(button.renderedElement);
-        });
+    materializeButtons() {
+        this.buttons.forEach((button) => button.prepare());
+    }
+
+    /**
+     * Refresh all the buttons
+     * @param {Object} options
+     */
+    update(options) {
+        if (
+            options.forceUpdate ||
+            options.url && options.url !== this.options.url
+        ) {
+            this.countersLeft = this.buttons.length;
+
+            this.buttons.forEach((button) => {
+                button.update(options);
+            });
+        }
+    }
+
+    /**
+     * Register the button as ready
+     */
+    finalize() {
+        this.countersLeft--;
+
+        if (this.countersLeft === 0) {
+            clearTimeout(this.readyDelay);
+            this.ready();
+        }
+    }
+
+    /**
+     * Display ready status
+     */
+    ready() {
+        // Remove class_visible to prevent flickering
+        this.container.classList.remove(`${config.name}_visible`);
+        this.container.classList.add(`${config.name}_ready`);
     }
 }
+
+export default Likely;

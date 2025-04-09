@@ -8,132 +8,164 @@ import services from './services';
 const htmlSpan = '<span class="{className}">{content}</span>';
 
 /**
- * Individual social link button with a counter
- * @param {Node} serviceDiv
- * @param {object} options
- * @param {Function} reportReadinessFn
+ * Separate social link widget
+ * @param {Node} widget
+ * @param {Likely} likely
+ * @param {Object} options
  */
 class LikelyButton {
-    #data;
-    #reportReadiness;
-
-    constructor(sourceDiv, options, reportReadinessFn) {
+    constructor(widget, likely, options) {
+        this.widget = widget;
+        this.likely = likely;
         this.options = mergeToNew(options);
-        this.sourceElement = sourceDiv;
-        this.#reportReadiness = reportReadinessFn;
+        this.detectService();
+        if (this.isConnected()) {
+            this.detectParams();
+        }
     }
 
-    setService() {
-        const classes = toArray(this.sourceElement.classList);
-        const serviceName = classes.find((className) => Object.prototype.hasOwnProperty.call(services, className));
+    /**
+     * Whether the button was successfully connected to a service
+     * @returns {Boolean}
+     */
+    isConnected() {
+        return this.options.service !== undefined;
+    }
+
+    /**
+     * If purpose of the buttond
+     * @returns {Boolean}
+     */
+    isUnrecognized() {
+        return !this.isConnected() && !this.options.foreign;
+    }
+
+    /**
+     * Make button ready for usage
+     */
+    prepare() {
+        if (this.isConnected()) {
+            this.initHtml();
+            this.registerAsCounted();
+        }
+    }
+
+    /**
+     * Update the counter
+     * @param {Object} options
+     */
+    update(options) {
+        const className = `.${config.prefix}counter`;
+        const counters = findAll(className, this.widget);
+        extendWith(this.options, mergeToNew({ forceUpdate: false }, options));
+        counters.forEach((node) => {
+            node.parentNode.removeChild(node);
+        });
+        this.wireClick();
+        this.registerAsCounted();
+    }
+
+    /**
+     * Attach a service based on given button classes
+     */
+    detectService() {
+        const classes = toArray(this.widget.classList);
+        // Array.prototype.filter()[0] instead of Array.prototype.find() for IE support
+        const serviceName = classes.filter((className) => Object.prototype.hasOwnProperty.call(services, className))[0];
         if (serviceName) {
             this.options.service = services[serviceName];
-            return true;
         }
-        else {
-            return false;
+        else if (classes.includes('likely__widget')) {
+            this.options.foreign = true;
         }
     }
 
     /**
-     * Make button ready for usage if it's connected
+     * Merge params from data-* attributes into options hash map
      */
-    build() {
-        if (this.#notServiceable()) {
-            return;
+    detectParams() {
+        const options = this.options;
+        this.data = getDataset(this.widget);
+        if (this.data.counter) {
+            options.staticCounter = this.data.counter;
         }
-        this.#renderHtml();
-        this.#animate();
+        if (this.data.url) {
+            options.url = this.data.url;
+        }
+        if (this.data.title) {
+            options.title = this.data.title;
+        }
     }
 
     /**
-     * Update the button with new options and refresh its counter
-     * @param {object} newOptions
+     * Initiate button's HTML
      */
-    update(newOptions) {
-        if (this.#notServiceable()) {
-            return;
-        }
-        extendWith(this.options, mergeToNew({ forceUpdate: false }, newOptions));
-        this.#animate();
-    }
+    initHtml() {
+        const oldWidget = this.widget;
+        const text = oldWidget.innerHTML;
 
-    /**
-     * Build button's HTML
-     */
-    #renderHtml() {
-        // Import params from data-* attributes into options hash map
-        this.#data = getDataset(this.sourceElement);
-        if (this.#data.counter) {
-            this.options.staticCounter = this.#data.counter;
+        // Rebuilding widget tag from div to <a>
+        const newWidget = document.createElement('a');
+        newWidget.innerHTML = oldWidget.innerHTML;
+        newWidget.className = oldWidget.className;
+
+        // Preserve accessibility attributes
+        if (oldWidget.getAttribute('role') !== undefined) {
+            newWidget.setAttribute('role', oldWidget.getAttribute('role'));
         }
-        if (this.#data.url) {
-            this.options.url = this.#data.url;
-        }
-        if (this.#data.title) {
-            this.options.title = this.#data.title;
+        if (oldWidget.getAttribute('aria-label') !== undefined) {
+            newWidget.setAttribute('aria-label', oldWidget.getAttribute('aria-label'));
         }
 
-        // Building new link element <a>
-        this.renderedElement = document.createElement('a');
+        oldWidget.parentNode.replaceChild(newWidget, oldWidget);
+        this.widget = newWidget;
+        const widget = this.widget;
 
-        // Arrange classes
-        this.renderedElement.className = this.sourceElement.className;
-        this.renderedElement.classList.remove(this.options.service.name);
-        this.renderedElement.className += `${this.#className('widget')}`;
+        widget.classList.remove(this.options.service.name);
+        widget.className += `${this.className('widget')}`;
 
-        // Copy accessibility attributes
-        this.#transferAttribute('role');
-        this.#transferAttribute('aria-label');
+        this.wireClick();
+
+        const button = interpolateStr(htmlSpan, {
+            className: this.className('button'),
+            content: text,
+        });
 
         const icon = interpolateStr(htmlSpan, {
-            className: this.#className('icon'),
+            className: this.className('icon'),
             content: wrapSVG(this.options.service.svgIconPath),
         });
 
-        const button = interpolateStr(htmlSpan, {
-            className: this.#className('button'),
-            content: this.sourceElement.innerHTML,
-        });
-
-        this.renderedElement.innerHTML = icon + button;
+        widget.innerHTML = icon + button;
     }
 
-    #transferAttribute(attribute) {
-        if (this.sourceElement.getAttribute(attribute) !== undefined) {
-            this.renderedElement.setAttribute(attribute, this.sourceElement.getAttribute(attribute));
-        }
+    wireClick() {
+        const completeUrl = this.buildUrl(this.options);
+        this.widget.setAttribute('href', completeUrl);
+        this.widget.addEventListener('click', this.shareClick(completeUrl).bind(this));
     }
 
-    #animate() {
-        // Set up click event listener
-        const shareUrl = this.#buildUrl(this.options);
-        this.renderedElement.setAttribute('href', shareUrl);
-        this.renderedElement.addEventListener('click', this.#shareClick(shareUrl).bind(this));
-
-        if (this.options.counters && this.options.service.counterUrl) {
-            // Set up counter
-            if (this.options.staticCounter) {
-                // Show static counter right away
-                this.#showCounter(this.options.staticCounter);
+    /**
+     * Perform fetching and displaying counter
+     */
+    registerAsCounted() {
+        const options = this.options;
+        if (options.counters && options.service.counterUrl) {
+            if (options.staticCounter) {
+                this.setDisplayedCounter(options.staticCounter);
             }
             else {
-                // Otherwise, connect to the service
-                connectButtonToService(this.#showCounter.bind(this), this.options);
+                connectButtonToService(this.setDisplayedCounter.bind(this), options);
             }
-        }
-        else {
-            // Report readiness immediately if there's no counter
-            this.#reportReadiness();
         }
     }
 
     /**
      * Combine a BEM-compliant classname
-     * @param {string} className
-     * @returns {string}
+     * @param {String} className
+     * @returns {String}
      */
-    #className(className) {
+    className(className) {
         const fullClass = config.prefix + className;
 
         return `${fullClass} ${fullClass}_${this.options.service.name}`;
@@ -141,16 +173,18 @@ class LikelyButton {
 
     /**
      * Set visible button counter to a value
-     * @param {string} counterString
+     * @param {String} counterString
      */
-    #showCounter(counterString) {
+    setDisplayedCounter(counterString) {
         const counterInt = parseInt(counterString, 10) || 0;
+        const counterElement = find(`.${config.name}__counter`, this.widget);
 
-        const className = `.${config.prefix}counter`;
-        find(className, this.renderedElement)?.remove();
+        if (counterElement) {
+            counterElement.parentNode.removeChild(counterElement);
+        }
 
         const options = {
-            className: this.#className('counter'),
+            className: this.className('counter'),
             content: counterInt,
         };
 
@@ -159,17 +193,17 @@ class LikelyButton {
             options.content = '';
         }
 
-        this.renderedElement.appendChild(createNode(interpolateStr(htmlSpan, options)));
+        this.widget.appendChild(createNode(interpolateStr(htmlSpan, options)));
 
-        this.#reportReadiness();
+        this.likely.finalize();
     }
 
     /**
      * Construct URL for sharing
-     * @param {object} options
-     * @returns {string}
+     * @param {Object} options
+     * @returns {String}
      */
-    #buildUrl(options) {
+    buildUrl(options) {
         options.service.urlCallback.call(this);
         const url = interpolateUrl(options.service.popupUrl, {
             url: options.url,
@@ -181,8 +215,8 @@ class LikelyButton {
             if (item === 'url' || item === 'title' || item === 'counter') {
                 return; // Ignore base params
             }
-            if (item in this.#data) {
-                paramsArray.push(`${encodeURIComponent(item)}=${encodeURIComponent(this.#data[item])}`);
+            if (item in this.data) {
+                paramsArray.push(`${encodeURIComponent(item)}=${encodeURIComponent(this.data[item])}`);
             }
         });
         const paramsString = paramsArray.join('&');
@@ -190,12 +224,13 @@ class LikelyButton {
         return paramsString === '' ? url : url + delimiter + paramsString;
     }
 
+
     /**
-     * Factory for click event handlers
-     * @param {string} completeUrl
+     * Click event listener
+     * @param {String} completeUrl
      * @returns {Function}
      */
-    #shareClick(completeUrl) {
+    shareClick(completeUrl) {
         return function (event) {
             const options = this.options;
             if (options.service.openPopup === true) {
@@ -210,10 +245,6 @@ class LikelyButton {
             }
             return true;
         };
-    }
-
-    #notServiceable() {
-        return this.options.service === undefined;
     }
 }
 export default LikelyButton;

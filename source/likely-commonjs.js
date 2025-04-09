@@ -2,21 +2,21 @@
 // It’s written with CommonJS imports and exports to make possible doing `module.exports = likely`.
 // This is required so that users work with `require('likely')`, not `require('likely').default`
 const { getBools, getDefaultUrl, mergeToNew } = require('./utils');
-const likelyWidget = require('./widget').default;
+const Likely = require('./widget').default;
 const config = require('./config').default;
 const { findAll } = require('./dom');
 const history = require('./history').default;
 const services = require('./services').default;
 
 /**
- * @param {Node} likelyRoot
- * @param {object} options
+ * @param {Node} node
+ * @param {Object} options
  * @private
- * @returns {likelyWidget}
+ * @returns {Likely}
  */
-const placeWidget = (likelyRoot, options) => {
-    const providedOptions = options || {};
-    const defaultOptions = {
+const initWidget = (node, options) => {
+    const fullOptions = options || {};
+    const defaults = {
         counters: true,
         timeout: 1e3,
         zeroes: false,
@@ -24,15 +24,14 @@ const placeWidget = (likelyRoot, options) => {
         url: getDefaultUrl(),
     };
 
-    const completeOptions = mergeToNew(defaultOptions, providedOptions, getBools(likelyRoot));
-    let widget = likelyRoot[config.name];
+    const realOptions = mergeToNew(defaults, fullOptions, getBools(node));
+    const widget = node[config.name];
     if (widget) {
-        widget.update(completeOptions);
+        widget.update(realOptions);
     }
     else {
-        widget = new likelyWidget(likelyRoot, completeOptions);
-        widget.renderButtons();
-        likelyRoot[config.name] = widget;
+        // Attaching widget to the node object for future re-initializations
+        node[config.name] = new Likely(node, realOptions);
     }
 
     return widget;
@@ -41,10 +40,10 @@ const placeWidget = (likelyRoot, options) => {
 const likely = {
     /**
      * Initiate Likely buttons on load
-     * @param {Node | Array<Node> | object} [nodes] a particular node or an array of widgets,
+     * @param {Node|Array<Node>|Object} [nodes] a particular node or an array of widgets,
      *                                     if not specified,
      *                                     tries to init all the widgets
-     * @param {object} [options] additional options for each widget
+     * @param {Object} [options] additional options for each widget
      */
     initiate(nodes, options) {
         let realNodes;
@@ -72,18 +71,21 @@ const likely = {
         history.onUrlChange(initWidgets);
 
         function initWidgets() {
-            realNodes.forEach((node) => placeWidget(node, realOptions));
+            realNodes.forEach((node) => {
+                initWidget(node, realOptions);
+            });
         }
     },
 
     /**
      * Reset stored broadcasters if forceUpdate is requested
-     * @param {object} realOptions
+     * @param {Object} realOptions
      */
     maintainStoredData(realOptions) {
         if (realOptions && realOptions.forceUpdate) {
-            Object.values(services).forEach((service) => {
-                service.resetBroadcasters();
+            // Object.values() is not supported by IE
+            Object.keys(services).forEach((serviceName) => {
+                services[serviceName].resetBroadcasters();
             });
         }
     },

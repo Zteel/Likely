@@ -8,16 +8,18 @@ const div = isBrowserEnv ? document.createElement('div') : {};
 
 /**
  * Wrap SVG coords from data object into SVG tag
- * @param {string} coords
- * @returns {string}
+ * @param {String} coords
+ * @returns {String}
  */
 export const wrapSVG = (coords) =>
     '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" ' +
-    'viewBox="0 0 16 16"><path d="' + coords + '"/></svg>';
+    'viewBox="0 0 16 16"><path d="M' +
+    coords +
+    'z"/></svg>';
 
 /**
  * Create node from HTML
- * @param {string} html
+ * @param {String} html
  * @returns {Node}
  */
 export const createNode = (html) => {
@@ -28,7 +30,7 @@ export const createNode = (html) => {
 
 /**
  * Load JSONP script. It gets executed after the main one is finished.
- * @param {string} url
+ * @param {String} url
  */
 export const loadJSONP = (url) => {
     const script = document.createElement('script');
@@ -43,7 +45,7 @@ export const loadJSONP = (url) => {
 
 /**
  * Find first node by selector
- * @param {string} selector
+ * @param {String} selector
  * @param {Node} [node]
  * @returns {Node}
  */
@@ -51,18 +53,18 @@ export const find = (selector, node) => (node || document).querySelector(selecto
 
 /**
  * Find all nodes by selector
- * @param {string} selector
+ * @param {String} selector
  * @param {Node} [node]
  * @returns {Node[]}
  */
 export const findAll = (selector, node) => Array.prototype.slice.call((node || document).querySelectorAll(selector));
 /**
  * Open the popup
- * @param {string} url
- * @param {string} winId
- * @param {number} width
- * @param {number} height
- * @returns {object | null}
+ * @param {String} url
+ * @param {String} winId
+ * @param {Number} width,
+ * @param {Number} height
+ * @returns {Object|null}
  */
 export const openPopup = (url, winId, width, height) => {
     const left = Math.round(screen.width / 2 - width / 2);
